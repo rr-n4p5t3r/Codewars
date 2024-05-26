@@ -1,79 +1,87 @@
 import threading
 import time
-
-class Philosopher(threading.Thread):
-    def __init__(self, name, left_fork, right_fork):
+# Desarrollado por Ricardo Rosero / https://github.com/rr-n4p5t3r
+class Filosofo(threading.Thread):
+    def __init__(self, nombre, tenedor_izquierdo, tenedor_derecho):
         """
         Inicializa un filosofo con su nombre y sus tenedores izquierdo y derecho.
+        
+        Parametros:
+            nombre (str): El nombre del filosofo.
+            tenedor_izquierdo (Fork): El tenedor izquierdo del filosofo.
+            tenedor_derecho (Fork): El tenedor derecho del filosofo.
         """
         threading.Thread.__init__(self)
-        self.name = name
-        self.left_fork = left_fork
-        self.right_fork = right_fork
+        self.nombre = nombre
+        self.tenedor_izquierdo = tenedor_izquierdo
+        self.tenedor_derecho = tenedor_derecho
 
     def run(self):
         """
         Bucle principal del filosofo: piensa, tiene hambre y come.
         """
         while True:
-            print(f'{self.name} esta pensando.')
+            print(f'{self.nombre} esta pensando.')
             time.sleep(2)  # Simula el tiempo que pasa pensando.
-            print(f'{self.name} tiene hambre.')
-            self.dine()  # Intenta comer.
+            print(f'{self.nombre} tiene hambre.')
+            self.comer()  # Intenta comer.
 
-    def dine(self):
+    def comer(self):
         """
-        Gestion de la accion de comer: adquiere los tenedores y simula la accion de comer.
+        Gestiona la accion de comer: adquiere los tenedores y simula la accion de comer.
         """
-        fork1, fork2 = self.left_fork, self.right_fork
+        tenedor_izquierdo, tenedor_derecho = self.tenedor_izquierdo, self.tenedor_derecho
 
         # Intentar adquirir los tenedores de manera ordenada para evitar interbloqueos.
-        with fork1:
-            print(f'{self.name} ha tomado el tenedor izquierdo ({fork1.name}).')
-            with fork2:
-                print(f'{self.name} ha tomado el tenedor derecho ({fork2.name}).')
-                print(f'{self.name} esta comiendo.')
+        with tenedor_izquierdo:
+            print(f'{self.nombre} ha tomado el tenedor izquierdo ({tenedor_izquierdo.nombre}).')
+            with tenedor_derecho:
+                print(f'{self.nombre} ha tomado el tenedor derecho ({tenedor_derecho.nombre}).')
+                print(f'{self.nombre} esta comiendo.')
                 time.sleep(2)  # Simula el tiempo que pasa comiendo.
-                print(f'{self.name} ha terminado de comer y ha soltado ambos tenedores.')
+                print(f'{self.nombre} ha terminado de comer y ha soltado ambos tenedores.')
 
-class Fork:
-    def __init__(self, name):
+class Tenedor:
+    def __init__(self, nombre):
         """
-        Inicializa un tenedor con un nombre y un bloqueo.
+        Inicializa un tenedor con un nombre y un cerrojo.
+        
+        Parametros:
+            nombre (str): El nombre del tenedor.
         """
-        self.name = name
-        self.lock = threading.Lock()
+        self.nombre = nombre
+        self.cerrojo = threading.Lock()
 
     def __enter__(self):
         """
-        Adquiere el bloqueo del tenedor.
+        Adquiere el cerrojo del tenedor.
         """
-        self.lock.acquire()
+        self.cerrojo.acquire()
 
     def __exit__(self, exc_type, exc_value, traceback):
         """
-        Libera el bloqueo del tenedor.
+        Libera el cerrojo del tenedor.
         """
-        self.lock.release()
+        self.cerrojo.release()
 
 def main():
     """
     Funcion principal para inicializar tenedores y filosofos, y comenzar el ciclo de vida de los filosofos.
     """
-    fork_names = ['Tenedor 1', 'Tenedor 2', 'Tenedor 3', 'Tenedor 4', 'Tenedor 5']
-    forks = [Fork(name) for name in fork_names]  # Crear una lista de tenedores.
+    nombres_tenedores = ['Tenedor 1', 'Tenedor 2', 'Tenedor 3', 'Tenedor 4', 'Tenedor 5']
+    tenedores = [Tenedor(nombre) for nombre in nombres_tenedores]  # Crear una lista de tenedores.
 
-    philosopher_names = ['Filosofo 1', 'Filosofo 2', 'Filosofo 3', 'Filosofo 4', 'Filosofo 5']
-    philosophers = [
-        Philosopher(philosopher_names[i], forks[i], forks[(i + 1) % 5])
+    nombres_filosofos = ['Filosofo 1', 'Filosofo 2', 'Filosofo 3', 'Filosofo 4', 'Filosofo 5']
+    filosofos = [
+        Filosofo(nombres_filosofos[i], tenedores[i], tenedores[(i + 1) % 5])
         for i in range(5)
     ]  # Crear una lista de filosofos con sus respectivos tenedores.
 
-    for philosopher in philosophers:
-        philosopher.start()  # Iniciar el hilo de cada filosofo.
+    for filosofo in filosofos:
+        filosofo.start()  # Iniciar el hilo de cada filosofo.
 
-    for philosopher in philosophers:
-        philosopher.join()  # Esperar a que todos los hilos terminen (aunque esto nunca sucedera en este caso).
+    for filosofo in filosofos:
+        filosofo.join()  # Esperar a que todos los hilos terminen (aunque esto nunca sucedera en este caso).
 
 if __name__ == '__main__':
     main()
